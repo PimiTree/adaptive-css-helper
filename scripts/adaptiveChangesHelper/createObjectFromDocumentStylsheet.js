@@ -32,10 +32,12 @@ function createObjectFromDocumentStylsheet(sheet, finalObj) {
                                                         .map(arr => {
                                                             return arr.split(': ');
                                                         });
+            
             })                    
         }
         
     })
+    finalObj['viewPort'] = [['max-width', `${window.innerWidth}`], ['max-height', `${window.innerHeight}`]]
 }
 
 export default createObjectFromDocumentStylsheet;

@@ -1,32 +1,31 @@
 {
+    "manifest_version": 3,
     "name": "Adaptive Supporter",
     "version": "0.1.0",
     "description": "Saving times to create amazing adaptive-responsive layouts at your page",
-    "permissions": ["storage", "tabs"],
-    "background": {
-        "service_worcker": "background.js" // read about this
+    "action": {
+        "default_icon": {
+            "16": "icons/16.png",
+            "32": "icons/32.png",
+            "48": "icons/48.png",
+            "128": "icons/128.png"
+        },
+        "default_title": "Adaptive Supporter",
+        "default_popup": "popup/popup.html"
     },
-    "content_scripts": [  // read about this
+    "content_scripts": [
         {
-            "js": ["contentScript.js"]
-        }
-    ],
-    "web_accessible_resources": [
-        {
-            "resourses": [
-                 "someRouteToRes"
+            "js": ["main/main.js"],
+            "matches": [
+                "<all_urls>"
             ]
         }
     ],
-    "action": {
-        "default_icon": {
-            "16": "soneROuteToIcon",
-            "24": "",
-            "32": ""
-        },
-        "default_title": "Adaptive Supporter",
-        "defeault_popup": "poup.html"
-    },
-    "manifest_version": 3
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "permissions": ["storage", "tabs", "scripting", "activeTab"]
+    
+   
 
 }

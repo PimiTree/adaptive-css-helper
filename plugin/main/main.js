@@ -1,44 +1,129 @@
 (() => {
+const cssAdaptiveTemplate = document.createElement('template');
+cssAdaptiveTemplate.setAttribute('id', 'cssAdaptiveTemplate');
+cssAdaptiveTemplate.innerHTML = `
+<style>
+    * {
+        margin: 0;
+        padding: 0; 
+    }
+    input, button {
+        border: none
+    }
+    .adaptiveSuporterWindow {
+        padding:  0 25px 25px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        display: grid;
+        grid-template: auto fit-content(100%) / auto;
+        gap: 20px;
+        width: 550px;
+        height: 600px;
+        resize: both;
+        background-color: #F1F4F9;
+        border-radius: 10px;
+        overflow: hidden;
+        z-index: 999999999;
+    }
+    .resultWindow {
+        width: 100%;
+        height: calc(100% - 25px);
+        border-radius: 10px;
+        background-color: #fff;
+        overflow-y: auto; 
+    }
+    .calcButton {
+       padding: 10px 0;
+       background-color: #fff;
+       border-radius: 10px;
+    }
+    .dragable {
+        width: 100%;
+        height: 40px;
+        cursor: grab;
+    }
+    .top-container {
+        display: flex;
+        align-items: center;
+    }
+    .close-button {
+        position: absolute;
+        right: 0;
+        top: 7px;
+        padding: 0 10px;
+        width: 25px;
+        height: 25px;
+        cursor: pointer;
+    }
+    .hide {
+        display: none;
+    }
+    </style>
+    <div class="adaptiveSuporterWindow">
+        <svg class="close-button" xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48"><path d="m249-207-42-42 231-231-231-231 42-42 231 231 231-231 42 42-231 231 231 231-42 42-231-231-231 231Z"/></svg>
+        
+        <div class="extension-container">
+            <div class="dragable"></div>
+            <pre class="resultWindow"></pre>
+            
+        </div>
+        <button class="calcButton">Calculate Deference</button>
+    </div>
 
-const extensionWindow = createView();
+`;
+
+const pluginContainer = document.createElement('div');
+pluginContainer.setAttribute('id', 'cssAdaptiveContainer');
+pluginContainer.attachShadow({mode: 'open'});
+pluginContainer.shadowRoot.append(cssAdaptiveTemplate.content.cloneNode(true));
+document.body.append(pluginContainer);
+
+
+   
+const root = pluginContainer.shadowRoot;
+const extensionWindow = root.querySelector('.adaptiveSuporterWindow');
 const calcButton = extensionWindow.querySelector('.calcButton');
 
-// const initObj = {};
-// const currObj = {};
-// let deference = {};
+const initObj = {};
+const currObj = {};
+let deference = {};
 
-// getSheetObject(initObj);
+getSheetObject(initObj);
 
-// calcButton.onclick = () => {
-//     // deference = {};
+calcButton.onclick = () => {
+    // deference = {};
 
-//     getSheetObject(currObj);
-//     getDeference(initObj, currObj, deference, false, [initObj.viewPort,  currObj.viewPort]);
+    getSheetObject(currObj);
+    getDeference(initObj, currObj, deference, false, [initObj.viewPort,  currObj.viewPort]);
 
-//     deference['@media'] = {};
+    deference['@media'] = {};
 
-//     Object.keys(initObj['@media']).forEach(media => {
-//         deference['@media'][`${media}`] = [];
+    Object.keys(initObj['@media']).forEach(media => {
+        deference['@media'][`${media}`] = [];
 
-//         getDeference(initObj['@media'][`${media}`], currObj['@media'][`${media}`], deference['@media'][`${media}`], true, [initObj.viewPort,  currObj.viewPort]);
-//     })
+        getDeference(initObj['@media'][`${media}`], currObj['@media'][`${media}`], deference['@media'][`${media}`], true, [initObj.viewPort,  currObj.viewPort]);
+    })
 
-//     createCssStyleText(deference);
-// };
+    createCssStyleText(deference);
+};
 
-// initUIInteractions()
+const dragable = extensionWindow.querySelector('.dragable');
+
+let isTouch;
+let prevY;
+let prevX;
+
+let initialY = 0;
+let initialX = 0;
+let currY = extensionWindow.getBoundingClientRect().y;
+let currX = extensionWindow.getBoundingClientRect().x;
+
+initUIInteractions();
 
 function initUIInteractions() {
-    const dragable = extensionWindow.querySelector('.dragable');
-
-    let isTouch;
-    let prevY;
-    let prevX;
-
-    let initialY = 0;
-    let initialX = 0;
-    let currY = extensionWindow.getBoundingClientRect().y;
-    let currX = extensionWindow.getBoundingClientRect().x;
+   
+   
 
     dragable.addEventListener('mousedown', dragInit);                      
     dragable.addEventListener('touchstart', dragInit, {'passive':true});
@@ -86,74 +171,7 @@ function getSheetObject(object) {
     createObjectFromDocumentStylsheet(currentStylesheet, object);
 }
 
-function createView() {
-    const extensionWindow = document.createElement('div');
-    extensionWindow.classList.add('adaptiveSuporterWindow');
-    extensionWindow.innerHTML = 
-    `
-    <style>
-    .adaptiveSuporterWindow {
-        padding:  0 25px 25px;
-        position: fixed;
-        top: 0;
-        left: 0;
-        display: grid;
-        grid-template: auto fit-content(100%) / auto;
-        gap: 20px;
-        width: 550px;
-        height: 600px;
-        resize: both;
-        background-color: #F1F4F9;
-        border-radius: 10px;
-        overflow: hidden;
-        z-index: 999999999;
-    }
-    .resultWindow {
-        width: 100%;
-        height: calc(100% - 25px);
-        border-radius: 10px;
-        background-color: #fff;
-    }
-    .calcButton {
-       padding: 10px 0;
-       background-color: #fff;
-       border-radius: 10px;
-    }
-    .dragable {
-        width: 100%;
-        height: 25px;
-        cursor: grab;
-    }
-    .top-container {
-        display: flex;
-        align-items: center;
-    }
-    .close-button {
-        position: absolute;
-        right: 0;
-        top: 0;
-        padding: 0 10px;
-        width: 45px;
-        height: 25px;
-        cursor: pointer;
-    }
-    .hide {
-        display: none;
-    }
-    </style>
-    <svg class="close-button" xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48"><path d="m249-207-42-42 231-231-231-231 42-42 231 231 231-231 42 42-231 231 231 231-42 42-231-231-231 231Z"/></svg>
-       
-    <div class="extension-container">
-        <div class="dragable"></div>
-        <pre class="resultWindow"></pre>
-        
-    </div>
-    <button class="calcButton">Calculate Deference</button>
-        
-    `
-    document.body.append(extensionWindow);
-    return extensionWindow;
-}
+
 
 function getDeference(initObj, currObj, lastobj, isMedia = false, viewPort) {
     const keys = Object.keys(currObj);
@@ -226,7 +244,6 @@ function createCssLock(itemDimensionMax, itemDimensionMin,  viewportMax, viewpor
 }
 
 function __PXtoRem(px) {   
-    console.log(parseInt(window.getComputedStyle(document.body).fontSize, 10)) 
     return px / parseInt(window.getComputedStyle(document.body).fontSize, 10);
 }
 
@@ -275,8 +292,8 @@ function createObjectFromDocumentStylsheet(sheet, finalObj) {
 }
 
 function createCssStyleText(deference) {
-    const resultWindow = document.querySelector('.resultWindow')
-    deference.cssStyleText = ``;
+    const resultWindow = extensionWindow.querySelector('.resultWindow');
+    deference.cssStyleText = '';
 
     assemblyCss(deference);
     assemblyMediaCss(deference['@media']);

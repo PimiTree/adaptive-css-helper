@@ -89,8 +89,10 @@ const initObj = {};
 const currObj = {};
 let deference = {};
 
-getSheetObject(initObj);
 
+
+getSheetObject(initObj);
+console.log(initObj);
 calcButton.onclick = () => {
     // deference = {};
 
@@ -171,8 +173,6 @@ function getSheetObject(object) {
     createObjectFromDocumentStylsheet(currentStylesheet, object);
 }
 
-
-
 function getDeference(initObj, currObj, lastobj, isMedia = false, viewPort) {
     const keys = Object.keys(currObj);
    
@@ -192,22 +192,18 @@ function getDeference(initObj, currObj, lastobj, isMedia = false, viewPort) {
                 }
                 
                 if (secArray[i][1] !== array[i-shift]?.[1]) {
-                    const cssLocksText = __insertCSSLock(key, array[i-shift][1], secArray[i][1], viewPort);
-                    const isNeedCSSLocks = cssLocksText.length !== 0;
+                    const cssLocksText = array[i-shift]?.[1] !== undefined ? __insertCSSLock(key, array[i-shift][1], secArray[i][1], viewPort) : false;
 
                     def[`${key}`] ??= [];    
-                    def[`${key}`][i] =  [secArray[i][0], isNeedCSSLocks ? cssLocksText : secArray[i][1]];
-
-                  
-                    // def[`${key}`] = def[`${key}`].filter(item => item !== null && item !== undefined);
+                    def[`${key}`][i] =  [secArray[i][0], cssLocksText ? cssLocksText : secArray[i][1]];
+                    def[`${key}`] = def[`${key}`].filter(item => item !== null && item !== undefined);
                 }               
             })
         }
     })
     if (!isMedia) {
         lastobj.mediaQuery = lastobj['viewPort'] ? [[`@media (${lastobj['viewPort'][0][0]}: ${lastobj['viewPort'][0][1]}px) {`],['}']] : null;  
-    }
-    
+    }  
 }
 
 function  __insertCSSLock(param, before, after, viewPort) {
@@ -253,8 +249,12 @@ function createObjectFromDocumentStylsheet(sheet, finalObj) {
             return;                
         }
 
+        
+
         if (style.selectorText !== undefined ) {
-            finalObj[`${style.selectorText}`] = style.cssText
+            const separetion = finalObj[`${style.selectorText}`]?.length ? finalObj[`${style.selectorText}`] : []
+
+            finalObj[`${style.selectorText}`] = [...style.cssText
                 .replace(`${style.selectorText} `, '')
                 .replace(/[\{|\}|"|'|]+/g, '')
                 .replace(/;\s+/g, ';')
@@ -263,9 +263,11 @@ function createObjectFromDocumentStylsheet(sheet, finalObj) {
                 .filter(arr => arr !== '')
                 .map(arr => {
                     return arr.split(': ');
-                });
+                }), ...separetion];
         }
         
+        console.log()
+
         if (style.cssText.includes('@media')) {
             if (finalObj['@media'] === undefined) finalObj['@media'] = {};
             if (finalObj['@media'][`${style.conditionText}`] === undefined) finalObj['@media'][`${style.conditionText}`] = [];

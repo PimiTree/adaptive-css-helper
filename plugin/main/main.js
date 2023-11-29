@@ -89,10 +89,8 @@ const initObj = {};
 const currObj = {};
 let deference = {};
 
-
-
 getSheetObject(initObj);
-console.log(initObj);
+
 calcButton.onclick = () => {
     // deference = {};
 
@@ -100,7 +98,7 @@ calcButton.onclick = () => {
     getDeference(initObj, currObj, deference, false, [initObj.viewPort,  currObj.viewPort]);
 
     deference['@media'] = {};
-
+    
     Object.keys(initObj['@media']).forEach(media => {
         deference['@media'][`${media}`] = [];
 

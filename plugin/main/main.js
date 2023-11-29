@@ -3,20 +3,20 @@ const cssAdaptiveTemplate = document.createElement('template');
 cssAdaptiveTemplate.setAttribute('id', 'cssAdaptiveTemplate');
 cssAdaptiveTemplate.innerHTML = `
 <style>
-    * {
+.adaptiveSuporterWindow * {
         margin: 0;
         padding: 0; 
     }
-    input, button {
+    .adaptiveSuporterWindow input, .adaptiveSuporterWindow button {
         border: none
     }
     .adaptiveSuporterWindow {
-        padding:  0 25px 25px;
+        padding:  40px 25px 25px;
         position: fixed;
         top: 0;
         left: 0;
         display: grid;
-        grid-template: auto fit-content(100%) / auto;
+        grid-template: auto fit-content(100%) fit-content(100%)/ auto;
         gap: 20px;
         width: 550px;
         height: 600px;
@@ -28,10 +28,10 @@ cssAdaptiveTemplate.innerHTML = `
     }
     .resultWindow {
         width: 100%;
-        height: calc(100% - 25px);
+        min-height: 150px;
         border-radius: 10px;
         background-color: #fff;
-        overflow-y: auto; 
+        overflow: auto; 
     }
     .calcButton {
        padding: 10px 0;
@@ -39,6 +39,9 @@ cssAdaptiveTemplate.innerHTML = `
        border-radius: 10px;
     }
     .dragable {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 40px;
         cursor: grab;
@@ -61,17 +64,17 @@ cssAdaptiveTemplate.innerHTML = `
     }
     </style>
     <div class="adaptiveSuporterWindow">
-        <svg class="close-button" xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48"><path d="m249-207-42-42 231-231-231-231 42-42 231 231 231-231 42 42-231 231 231 231-42 42-231-231-231 231Z"/></svg>
-        
-        <div class="extension-container">
-            <div class="dragable"></div>
-            <pre class="resultWindow"></pre>
-            
-        </div>
+        <pre class="resultWindow"></pre>
+        <select class="sheetPicker">fghfghfg</select>
         <button class="calcButton">Calculate Deference</button>
+        <div class="dragable"></div>
+        <svg class="close-button" xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48"><path d="m249-207-42-42 231-231-231-231 42-42 231 231 231-231 42 42-231 231 231 231-42 42-231-231-231 231Z"/></svg>
     </div>
 
 `;
+
+
+
 
 const pluginContainer = document.createElement('div');
 pluginContainer.setAttribute('id', 'cssAdaptiveContainer');
@@ -79,11 +82,12 @@ pluginContainer.attachShadow({mode: 'open'});
 pluginContainer.shadowRoot.append(cssAdaptiveTemplate.content.cloneNode(true));
 document.body.append(pluginContainer);
 
-
-   
 const root = pluginContainer.shadowRoot;
 const extensionWindow = root.querySelector('.adaptiveSuporterWindow');
 const calcButton = extensionWindow.querySelector('.calcButton');
+
+createSheetPickerOptions();
+
 
 const initObj = {};
 const currObj = {};
@@ -92,83 +96,115 @@ let deference = {};
 getSheetObject(initObj);
 
 calcButton.onclick = () => {
-    // deference = {};
-
     getSheetObject(currObj);
-    getDeference(initObj, currObj, deference, false, [initObj.viewPort,  currObj.viewPort]);
 
-    deference['@media'] = {};
+    Object.keys(currObj).forEach(fileName => {
+        deference[fileName] = {};
+        getDeference(initObj[fileName], currObj[fileName], deference[fileName], false, [initObj[fileName].viewPort,  currObj[fileName].viewPort]);
+     
+        deference[fileName]['@media'] = {};
+
+        Object.keys(initObj[fileName]['@media'] || []).forEach(media => {
+            deference[fileName]['@media'][`${media}`] = [];
     
-    Object.keys(initObj['@media']).forEach(media => {
-        deference['@media'][`${media}`] = [];
-
-        getDeference(initObj['@media'][`${media}`], currObj['@media'][`${media}`], deference['@media'][`${media}`], true, [initObj.viewPort,  currObj.viewPort]);
+            getDeference(initObj[fileName]['@media'][`${media}`], currObj[fileName]['@media'][`${media}`], deference[fileName]['@media'][`${media}`], true, [initObj[fileName].viewPort,  currObj[fileName].viewPort]);
+        })
+    
+        createCssStyleText(deference[fileName]);
+        updateResultWindowText();
     })
-
-    createCssStyleText(deference);
+    console.log(deference);
 };
-
-const dragable = extensionWindow.querySelector('.dragable');
-
-let isTouch;
-let prevY;
-let prevX;
-
-let initialY = 0;
-let initialX = 0;
-let currY = extensionWindow.getBoundingClientRect().y;
-let currX = extensionWindow.getBoundingClientRect().x;
-
+updateResultWindowText();
+chooseDeference();
 initUIInteractions();
 
-function initUIInteractions() {
-   
-   
+// functions block;
+function createSheetPickerOptions() {
+    const pageSheets = [...document.styleSheets];
+    const sheetPicker = extensionWindow.querySelector('.sheetPicker');
+    pageSheets.forEach(sheet => {
+        const fileName = sheet.href.replace(/^https?\:(\/.+\/)/, '');
 
-    dragable.addEventListener('mousedown', dragInit);                      
-    dragable.addEventListener('touchstart', dragInit, {'passive':true});
-    dragable.addEventListener('mouseup', removeListeners);
-    dragable.addEventListener('mouseout', removeListeners);
-    dragable.addEventListener('touchend', removeListeners, {'passive':true});
+        sheetPicker.innerHTML = `${sheetPicker.innerHTML}<option value='${fileName}'>${fileName}</option>`;
+    })   
 }
 
-function removeListeners() {
-    dragable.removeEventListener('mousemove', draging);
-    dragable.removeEventListener('touchmove', draging, {'passive':true} );
+function chooseDeference() {
+    const sheetPicker =  extensionWindow.querySelector('.sheetPicker');
+    sheetPicker.onchange = () => {
+        updateResultWindowText();
+        
+    };
 }
 
-function dragInit(e) {
-    isTouch = e.type === 'touchstart';
-    initialY = isTouch ? e.touches[0].clientY : e.clientY;
-    initialX = isTouch ? e.touches[0].clientX : e.clientX;
+function updateResultWindowText() {
+    const resultWindow = extensionWindow.querySelector('.resultWindow');
+    const sheetPicker =  extensionWindow.querySelector('.sheetPicker');
 
-    prevY = currY;
-    prevX = currX;
+    const has = Object.prototype.hasOwnProperty.call(deference, sheetPicker.value);
 
-    const eventOptions = isTouch ? {'passive':true} : {'passive':false};
-    dragable.addEventListener(isTouch ? 'touchmove' : 'mousemove', draging, eventOptions);
-}
-
-function draging(e)  {
-    if (!isTouch) e.preventDefault();
-
-    const deferenceY = initialY - (isTouch ? e.touches[0].clientY : e.clientY);
-    const deferenceX = initialX - (isTouch ? e.touches[0].clientX : e.clientX);
-
-    currY = prevY - deferenceY;
-    currX = prevX- deferenceX;
-
-    setExtensionWindowPosition();
-}
-function setExtensionWindowPosition() {
-    extensionWindow.style.top = `${currY}px`;
-    extensionWindow.style.left = `${currX}px`;
+    resultWindow.textContent = has ? deference[sheetPicker.value].cssStyleText : 'null';
 }
 
 function getSheetObject(object) {
-    const currentStylesheet = [...document.styleSheets[1].cssRules];
+    const pageSheets = [...document.styleSheets];
 
-    createObjectFromDocumentStylsheet(currentStylesheet, object);
+    pageSheets.forEach(sheet => {
+        const fileName = sheet.href.replace(/^https?\:(\/.+\/)/, '');
+
+        object[fileName] = {};
+        createObjectFromDocumentStylsheet([...sheet.cssRules], object[fileName]);
+    })
+   
+
+    function createObjectFromDocumentStylsheet(sheet, finalObj) {
+        sheet.forEach(style => {
+            if (style.cssText.includes('@font-face')) {
+                return;                
+            }
+    
+            if (style.selectorText !== undefined ) {
+                const separetion = finalObj[`${style.selectorText}`]?.length ? finalObj[`${style.selectorText}`] : []
+    
+                finalObj[`${style.selectorText}`] = [...style.cssText
+                    .replace(`${style.selectorText} `, '')
+                    .replace(/[\{|\}|"|'|]+/g, '')
+                    .replace(/;\s+/g, ';')
+                    .trim()
+                    .split(';')
+                    .filter(arr => arr !== '')
+                    .map(arr => {
+                        return arr.split(': ');
+                    }), ...separetion];
+            }
+            
+      
+    
+            if (style.cssText.includes('@media')) {
+                if (finalObj['@media'] === undefined) finalObj['@media'] = {};
+                if (finalObj['@media'][`${style.conditionText}`] === undefined) finalObj['@media'][`${style.conditionText}`] = [];
+    
+                Object.values(style.cssRules).forEach( rule => {
+                    finalObj['@media']
+                            [`${style.conditionText}`]
+                            [`${rule.selectorText}`] = rule.cssText
+                                                            .replace(`${rule.selectorText} `, '')
+                                                            .replace(/[\{|\}|"|'|]+/g, '')
+                                                            .replace(/;\s+/g, ';')
+                                                            .trim()
+                                                            .split(';')
+                                                            .filter(arr => arr !== '')
+                                                            .map(arr => {
+                                                                return arr.split(': ');
+                                                            });
+                
+                })                    
+            }
+            
+        })
+        finalObj['viewPort'] = [['max-width', `${window.innerWidth}`], ['max-height', `${window.innerHeight}`]]
+    }
 }
 
 function getDeference(initObj, currObj, lastobj, isMedia = false, viewPort) {
@@ -241,63 +277,12 @@ function __PXtoRem(px) {
     return px / parseInt(window.getComputedStyle(document.body).fontSize, 10);
 }
 
-function createObjectFromDocumentStylsheet(sheet, finalObj) {
-    sheet.forEach(style => {
-        if (style.cssText.includes('@font-face')) {
-            return;                
-        }
-
-        
-
-        if (style.selectorText !== undefined ) {
-            const separetion = finalObj[`${style.selectorText}`]?.length ? finalObj[`${style.selectorText}`] : []
-
-            finalObj[`${style.selectorText}`] = [...style.cssText
-                .replace(`${style.selectorText} `, '')
-                .replace(/[\{|\}|"|'|]+/g, '')
-                .replace(/;\s+/g, ';')
-                .trim()
-                .split(';')
-                .filter(arr => arr !== '')
-                .map(arr => {
-                    return arr.split(': ');
-                }), ...separetion];
-        }
-        
-        console.log()
-
-        if (style.cssText.includes('@media')) {
-            if (finalObj['@media'] === undefined) finalObj['@media'] = {};
-            if (finalObj['@media'][`${style.conditionText}`] === undefined) finalObj['@media'][`${style.conditionText}`] = [];
-
-            Object.values(style.cssRules).forEach( rule => {
-                finalObj['@media']
-                        [`${style.conditionText}`]
-                        [`${rule.selectorText}`] = rule.cssText
-                                                        .replace(`${rule.selectorText} `, '')
-                                                        .replace(/[\{|\}|"|'|]+/g, '')
-                                                        .replace(/;\s+/g, ';')
-                                                        .trim()
-                                                        .split(';')
-                                                        .filter(arr => arr !== '')
-                                                        .map(arr => {
-                                                            return arr.split(': ');
-                                                        });
-            
-            })                    
-        }
-        
-    })
-    finalObj['viewPort'] = [['max-width', `${window.innerWidth}`], ['max-height', `${window.innerHeight}`]]
-}
 
 function createCssStyleText(deference) {
-    const resultWindow = extensionWindow.querySelector('.resultWindow');
     deference.cssStyleText = '';
 
     assemblyCss(deference);
     assemblyMediaCss(deference['@media']);
-    resultWindow.innerHTML = `${deference.cssStyleText}`;
 
     function assemblyCss(obj, isExistMedia = true) {
         const keys = Object.keys(obj);
@@ -340,10 +325,61 @@ function createCssStyleText(deference) {
             if(!isExistMedia) deference.cssStyleText +=`${prop} {\n${ruleString}\n}\n`
         })
         return cssStyleText;
-    }  
+    }   
+}
+function initUIInteractions() {
+    const dragable = extensionWindow.querySelector('.dragable');
+    let isTouch;
+    let prevY;
+    let prevX;
+
+    let initialY = 0;
+    let initialX = 0;
+    let currY = extensionWindow.getBoundingClientRect().y;
+    let currX = extensionWindow.getBoundingClientRect().x;
+
+
+    dragable.addEventListener('mousedown', dragInit);                      
+    dragable.addEventListener('touchstart', dragInit, {'passive':true});
+    dragable.addEventListener('mouseup', removeListeners);
+    dragable.addEventListener('mouseout', removeListeners);
+    dragable.addEventListener('touchend', removeListeners, {'passive':true});
+    function removeListeners() {
+        dragable.removeEventListener('mousemove', draging);
+        dragable.removeEventListener('touchmove', draging, {'passive':true} );
+    }
     
+    function dragInit(e) {
+        isTouch = e.type === 'touchstart';
+        initialY = isTouch ? e.touches[0].clientY : e.clientY;
+        initialX = isTouch ? e.touches[0].clientX : e.clientX;
+    
+        prevY = currY;
+        prevX = currX;
+    
+        const eventOptions = isTouch ? {'passive':true} : {'passive':false};
+        dragable.addEventListener(isTouch ? 'touchmove' : 'mousemove', draging, eventOptions);
+    }
+    
+    function draging(e)  {
+        if (!isTouch) e.preventDefault();
+    
+        const deferenceY = initialY - (isTouch ? e.touches[0].clientY : e.clientY);
+        const deferenceX = initialX - (isTouch ? e.touches[0].clientX : e.clientX);
+    
+        currY = prevY - deferenceY;
+        currX = prevX- deferenceX;
+    
+        setExtensionWindowPosition();
+    }
+    function setExtensionWindowPosition() {
+        extensionWindow.style.top = `${currY}px`;
+        extensionWindow.style.left = `${currX}px`;
+    }
     
 }
+
+
 
 })()
 

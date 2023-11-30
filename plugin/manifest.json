@@ -17,7 +17,7 @@
         {
             "js": ["main/main.js"],
             "matches": [
-                "<all_urls>"
+                "*://localhost/freelance/volodimir/manicure/v1/*"
             ]
         }
     ],

@@ -17,7 +17,7 @@ cssAdaptiveTemplate.innerHTML = `
         left: 0;
         display: grid;
         grid-template: auto fit-content(100%) fit-content(100%)/ auto;
-        gap: 20px;
+        gap: 10px;
         width: 550px;
         height: 600px;
         resize: both;
@@ -32,6 +32,12 @@ cssAdaptiveTemplate.innerHTML = `
         border-radius: 10px;
         background-color: #fff;
         overflow: auto; 
+    }
+    .sheetPicker {
+        height: 40px;
+        border: none;
+        border-radius: 10px;
+        outline: none;
     }
     .calcButton {
        padding: 10px 0;
@@ -65,15 +71,13 @@ cssAdaptiveTemplate.innerHTML = `
     </style>
     <div class="adaptiveSuporterWindow">
         <pre class="resultWindow"></pre>
-        <select class="sheetPicker">fghfghfg</select>
+        <select class="sheetPicker"></select>
         <button class="calcButton">Calculate Deference</button>
         <div class="dragable"></div>
         <svg class="close-button" xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48"><path d="m249-207-42-42 231-231-231-231 42-42 231 231 231-231 42 42-231 231 231 231-42 42-231-231-231 231Z"/></svg>
     </div>
 
 `;
-
-
 
 
 const pluginContainer = document.createElement('div');
@@ -94,7 +98,7 @@ const currObj = {};
 let deference = {};
 
 getSheetObject(initObj);
-
+console.log(initObj)
 calcButton.onclick = () => {
     getSheetObject(currObj);
 
@@ -157,7 +161,6 @@ function getSheetObject(object) {
         createObjectFromDocumentStylsheet([...sheet.cssRules], object[fileName]);
     })
    
-
     function createObjectFromDocumentStylsheet(sheet, finalObj) {
         sheet.forEach(style => {
             if (style.cssText.includes('@font-face')) {
@@ -236,7 +239,7 @@ function getDeference(initObj, currObj, lastobj, isMedia = false, viewPort) {
         }
     })
     if (!isMedia) {
-        lastobj.mediaQuery = lastobj['viewPort'] ? [[`@media (${lastobj['viewPort'][0][0]}: ${lastobj['viewPort'][0][1]}px) {`],['}']] : null;  
+        lastobj.mediaQuery = lastobj['viewPort'] ? [[`@media (${lastobj['viewPort'][0][0]}: ${lastobj['viewPort'][0][1]}px) {`],['}']] : '';  
     }  
 }
 
@@ -309,14 +312,19 @@ function createCssStyleText(deference) {
         
     } 
 
+
     function assemblyRules(keys, obj, isExistMedia = false) {
         let cssStyleText = ''
 
+        console.log(obj)
+        
         keys.forEach(prop => {
-            if (prop.search(/[.:*]|(main)/) === -1) return;
+            if (prop.search(/^[.:#[*a-zA-Z]{1}/) === -1) return;
+            if (prop === 'cssStyleText') return;
+            if (prop === 'mediaQuery') return;
+            if (prop === 'viewPort') return;
             
             let ruleString = '';
-    
             obj[`${prop}`].forEach(rule => {
                 if (ruleString.indexOf(`${rule[0]}: ${rule[1]}`) !== - 1) return;
                 ruleString +=`    ${rule[0]}: ${rule[1]};\n`})
@@ -379,7 +387,4 @@ function initUIInteractions() {
     
 }
 
-
-
 })()
-

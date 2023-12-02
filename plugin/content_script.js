@@ -1,137 +1,50 @@
-(() => {
-const cssAdaptiveTemplate = document.createElement('template');
-cssAdaptiveTemplate.setAttribute('id', 'cssAdaptiveTemplate');
-cssAdaptiveTemplate.innerHTML = `
-<style>
-.adaptiveSuporterWindow * {
-        margin: 0;
-        padding: 0; 
-    }
-    .adaptiveSuporterWindow input, .adaptiveSuporterWindow button {
-        border: none
-    }
-    .adaptiveSuporterWindow {
-        padding:  40px 25px 25px;
-        position: fixed;
-        top: 0;
-        left: 0;
-        display: grid;
-        grid-template: auto fit-content(100%) fit-content(100%)/ auto;
-        gap: 10px;
-        width: 550px;
-        height: 600px;
-        resize: both;
-        background-color: #F1F4F9;
-        border-radius: 10px;
-        overflow: hidden;
-        z-index: 999999999;
-    }
-    .resultWindow {
-        width: 100%;
-        min-height: 150px;
-        border-radius: 10px;
-        background-color: #fff;
-        overflow: auto; 
-    }
-    .sheetPicker {
-        height: 40px;
-        border: none;
-        border-radius: 10px;
-        outline: none;
-    }
-    .calcButton {
-       padding: 10px 0;
-       background-color: #fff;
-       border-radius: 10px;
-    }
-    .dragable {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 40px;
-        cursor: grab;
-    }
-    .top-container {
-        display: flex;
-        align-items: center;
-    }
-    .close-button {
-        position: absolute;
-        right: 0;
-        top: 7px;
-        padding: 0 10px;
-        width: 25px;
-        height: 25px;
-        cursor: pointer;
-    }
-    .hide {
-        display: none;
-    }
-    </style>
-    <div class="adaptiveSuporterWindow">
-        <pre class="resultWindow"></pre>
-        <select class="sheetPicker"></select>
-        <button class="calcButton">Calculate Deference</button>
-        <div class="dragable"></div>
-        <svg class="close-button" xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48"><path d="m249-207-42-42 231-231-231-231 42-42 231 231 231-231 42 42-231 231 231 231-42 42-231-231-231 231Z"/></svg>
-    </div>
-
-`;
+// const initObj = {};  done
+// const currObj = {};  done
+// let deference = {};  done
 
 
-const pluginContainer = document.createElement('div');
-pluginContainer.setAttribute('id', 'cssAdaptiveContainer');
-pluginContainer.attachShadow({mode: 'open'});
-pluginContainer.shadowRoot.append(cssAdaptiveTemplate.content.cloneNode(true));
-document.body.append(pluginContainer);
+// createSheetPickerOptions();  done
 
-const root = pluginContainer.shadowRoot;
-const extensionWindow = root.querySelector('.adaptiveSuporterWindow');
-const calcButton = extensionWindow.querySelector('.calcButton');
+// getSheetObject(initObj);  done
 
-createSheetPickerOptions();
+// calcButton.onclick = () => {
+//     getSheetObject(currObj);  done
 
-
-const initObj = {};
-const currObj = {};
-let deference = {};
-
-getSheetObject(initObj);
-console.log(initObj)
-calcButton.onclick = () => {
-    getSheetObject(currObj);
-
-    Object.keys(currObj).forEach(fileName => {
-        deference[fileName] = {};
-        getDeference(initObj[fileName], currObj[fileName], deference[fileName], false, [initObj[fileName].viewPort,  currObj[fileName].viewPort]);
+//     Object.keys(currObj).forEach(fileName => {
+//         deference[fileName] = {};
+//         getDeference(initObj[fileName], currObj[fileName], deference[fileName], false, [initObj[fileName].viewPort,  currObj[fileName].viewPort]);
      
-        deference[fileName]['@media'] = {};
+//         deference[fileName]['@media'] = {};
 
-        Object.keys(initObj[fileName]['@media'] || []).forEach(media => {
-            deference[fileName]['@media'][`${media}`] = [];
+//         Object.keys(initObj[fileName]['@media'] || []).forEach(media => {
+//             deference[fileName]['@media'][`${media}`] = [];
     
-            getDeference(initObj[fileName]['@media'][`${media}`], currObj[fileName]['@media'][`${media}`], deference[fileName]['@media'][`${media}`], true, [initObj[fileName].viewPort,  currObj[fileName].viewPort]);
-        })
+//             getDeference(initObj[fileName]['@media'][`${media}`], currObj[fileName]['@media'][`${media}`], deference[fileName]['@media'][`${media}`], true, [initObj[fileName].viewPort,  currObj[fileName].viewPort]);
+//         })
     
-        createCssStyleText(deference[fileName]);
-        updateResultWindowText();
-    })
-    console.log(deference);
-};
-updateResultWindowText();
-chooseDeference();
-initUIInteractions();
+//         createCssStyleText(deference[fileName]);
+//         updateResultWindowText();
+//     })
+
+// };
+// updateResultWindowText();
+// chooseDeference();
+
 
 // functions block;
 function createSheetPickerOptions() {
     const pageSheets = [...document.styleSheets];
-    const sheetPicker = extensionWindow.querySelector('.sheetPicker');
+
+    let accumulator = '';
     pageSheets.forEach(sheet => {
         const fileName = sheet.href.replace(/^https?\:(\/.+\/)/, '');
 
-        sheetPicker.innerHTML = `${sheetPicker.innerHTML}<option value='${fileName}'>${fileName}</option>`;
+       
+
+        accumulator = `${accumulator}\n<option value='${fileName}'>${fileName}</option>`;
     })   
+
+    return accumulator;
 }
 
 function chooseDeference() {
@@ -151,8 +64,10 @@ function updateResultWindowText() {
     resultWindow.textContent = has ? deference[sheetPicker.value].cssStyleText : 'null';
 }
 
-function getSheetObject(object) {
+function getSheetObject() {
     const pageSheets = [...document.styleSheets];
+
+    const object = {}
 
     pageSheets.forEach(sheet => {
         const fileName = sheet.href.replace(/^https?\:(\/.+\/)/, '');
@@ -161,6 +76,8 @@ function getSheetObject(object) {
         createObjectFromDocumentStylsheet([...sheet.cssRules], object[fileName]);
     })
    
+    return object;
+
     function createObjectFromDocumentStylsheet(sheet, finalObj) {
         sheet.forEach(style => {
             if (style.cssText.includes('@font-face')) {
@@ -208,6 +125,7 @@ function getSheetObject(object) {
         })
         finalObj['viewPort'] = [['max-width', `${window.innerWidth}`], ['max-height', `${window.innerHeight}`]]
     }
+
 }
 
 function getDeference(initObj, currObj, lastobj, isMedia = false, viewPort) {
@@ -315,8 +233,6 @@ function createCssStyleText(deference) {
 
     function assemblyRules(keys, obj, isExistMedia = false) {
         let cssStyleText = ''
-
-        console.log(obj)
         
         keys.forEach(prop => {
             if (prop.search(/^[.:#[*a-zA-Z]{1}/) === -1) return;
@@ -335,56 +251,29 @@ function createCssStyleText(deference) {
         return cssStyleText;
     }   
 }
-function initUIInteractions() {
-    const dragable = extensionWindow.querySelector('.dragable');
-    let isTouch;
-    let prevY;
-    let prevX;
-
-    let initialY = 0;
-    let initialX = 0;
-    let currY = extensionWindow.getBoundingClientRect().y;
-    let currX = extensionWindow.getBoundingClientRect().x;
 
 
-    dragable.addEventListener('mousedown', dragInit);                      
-    dragable.addEventListener('touchstart', dragInit, {'passive':true});
-    dragable.addEventListener('mouseup', removeListeners);
-    dragable.addEventListener('mouseout', removeListeners);
-    dragable.addEventListener('touchend', removeListeners, {'passive':true});
-    function removeListeners() {
-        dragable.removeEventListener('mousemove', draging);
-        dragable.removeEventListener('touchmove', draging, {'passive':true} );
-    }
-    
-    function dragInit(e) {
-        isTouch = e.type === 'touchstart';
-        initialY = isTouch ? e.touches[0].clientY : e.clientY;
-        initialX = isTouch ? e.touches[0].clientX : e.clientX;
-    
-        prevY = currY;
-        prevX = currX;
-    
-        const eventOptions = isTouch ? {'passive':true} : {'passive':false};
-        dragable.addEventListener(isTouch ? 'touchmove' : 'mousemove', draging, eventOptions);
-    }
-    
-    function draging(e)  {
-        if (!isTouch) e.preventDefault();
-    
-        const deferenceY = initialY - (isTouch ? e.touches[0].clientY : e.clientY);
-        const deferenceX = initialX - (isTouch ? e.touches[0].clientX : e.clientX);
-    
-        currY = prevY - deferenceY;
-        currX = prevX- deferenceX;
-    
-        setExtensionWindowPosition();
-    }
-    function setExtensionWindowPosition() {
-        extensionWindow.style.top = `${currY}px`;
-        extensionWindow.style.left = `${currX}px`;
-    }
-    
-}
+// Create a connection to the service worker
 
-})()
+const port = chrome.runtime.connect({ name: "content" });
+
+
+
+port.onMessage.addListener(function (msg) {
+    // console.log('Content get msg:', msg)
+    if(msg.handshake === 'devtools') {
+        port.postMessage({
+            sheetPickeroptions: createSheetPickerOptions(),
+            initObj: getSheetObject()
+        })
+    }
+    if(msg.getCurrSheetObj === 'true') {
+        port.postMessage({
+            currObj: getSheetObject()
+        })
+    }
+})
+
+port.postMessage({
+    handshake: 'content'
+})

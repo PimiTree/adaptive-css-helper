@@ -201,9 +201,6 @@ port.onMessage.addListener(function (msg) {
             [msg.getSheetObject]: getSheetObject()
         })
 
-        const a = getSheetObject();
-        console.log(a['style.css']['@media']['(max-width: 575px)']);
-
         return;
     }
 
@@ -267,7 +264,7 @@ function getSheetObject() {
                 
             if (style.cssText.includes('@media')) {
                 if (finalObj['@media'] === undefined) finalObj['@media'] = {};
-                if (finalObj['@media'][`${style.conditionText}`] === undefined) finalObj['@media'][`${style.conditionText}`] = [];
+                if (finalObj['@media'][`${style.conditionText}`] === undefined) finalObj['@media'][`${style.conditionText}`] = {};
     
                 Object.values(style.cssRules).forEach( rule => {
                     finalObj['@media']

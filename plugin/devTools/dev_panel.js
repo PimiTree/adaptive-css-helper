@@ -1,60 +1,76 @@
 // messaging
 const port = chrome.runtime.connect({ name: "devtools" });
 
-port.onMessage.addListener(function(msg) {
-    if (Object.hasOwn(msg, 'sheetPickeroptions') ) {
+// console.log(chrome.devtools.inspectedWindow.tabId)
+
+port.onMessage.addListener(function(msg, sender, sendResponse) {
+    // console.log(sender)
+    
+    if (msg.init) {
         sheetPicker.innerHTML = msg.sheetPickeroptions;
-        initObj = {...msg.initObj};
+        initObj = {...msg.init};
+        console.log('initObkject',  initObj);
+        return;
     }
 
-    if (Object.hasOwn(msg, 'currObj')) {
-        currObj = {...msg.currObj};
+    // if (Object.hasOwn(msg, 'currObj')) {
+    //     currObj = {...msg.currObj};
+    //     getDererence();
+    // }
+    if((msg.background)) {
+        console.log(msg.background)
     }
 })
 
 port.postMessage({ handshake: "devtools" });
+
+
 // messaging
 
 // bussines logic
 const calcButton = document.querySelector('.calcButton');
+const resultWindow = document.querySelector('.resultWindow');
+const sheetPicker = document.querySelector('.sheetPicker');
+const tadIdContainer = document.querySelector('.tabId');
+tadIdContainer.textContent = chrome.devtools.inspectedWindow.tabId;
 
 let initObj = {};
 let currObj = {};
 let deference = {};
 let sheets = [];
 
-let sheetPicker = document.querySelector('.sheetPicker');
+// get initObject
+port.postMessage({ 
+    route: chrome.devtools.inspectedWindow.tabId,
+    getSheetObject: 'init' 
+});
 
 
 calcButton.onclick = () => {
-    port.postMessage({ getCurrSheetObj: 'true' });
-
-    Object.keys(currObj).forEach(fileName => {
-        deference[fileName] = {};
-        getDeference(initObj[fileName], currObj[fileName], deference[fileName], false, [initObj[fileName].viewPort,  currObj[fileName].viewPort]);
-        
-        deference[fileName]['@media'] = {};
-
-        Object.keys(initObj[fileName]['@media'] || []).forEach(media => {
-            deference[fileName]['@media'][`${media}`] = [];
-    
-            getDeference(initObj[fileName]['@media'][`${media}`], currObj[fileName]['@media'][`${media}`], deference[fileName]['@media'][`${media}`], true, [initObj[fileName].viewPort,  currObj[fileName].viewPort]);
-        })
-    
-        createCssStyleText(deference[fileName]);
-        updateResultWindowText();
-    })
+    console.log(chrome.devtools.inspectedWindow.tabId)
+    port.postMessage({ route: chrome.devtools.inspectedWindow.tabId });
+    // port.postMessage({ getCurrSheetObj: 'true' });
 }
 updateResultWindowText();
-chooseDeference();
+
+sheetPicker.onchange = () => {
+    updateResultWindowText(); 
+};
+
 // bussines logic
 
-
-
 // functions block;
+function resetData() {
+    resultWindow.innerHTML = '';
+    sheetPicker.innerHTML = '';
+    initObj = {};
+    currObj = {};
+    deference = {};
+    sheets = [];
+}
 function createSheetPickerOptions() {
     const pageSheets = [...document.styleSheets];
-    const sheetPicker = extensionWindow.querySelector('.sheetPicker');
+
     pageSheets.forEach(sheet => {
         const fileName = sheet.href.replace(/^https?\:(\/.+\/)/, '');
 
@@ -62,8 +78,25 @@ function createSheetPickerOptions() {
     })   
 }
 
+function getDererence() {
+    Object.keys(currObj).forEach(fileName => {
+        deference[fileName] = {};
+        getPartialDeference(initObj[fileName], currObj[fileName], deference[fileName], false, [initObj[fileName].viewPort,  currObj[fileName].viewPort]);
+        
+        deference[fileName]['@media'] = {};
 
-function getDeference(initObj, currObj, lastobj, isMedia = false, viewPort) {
+        Object.keys(initObj[fileName]['@media'] || []).forEach(media => {
+            deference[fileName]['@media'][`${media}`] = [];
+    
+            getPartialDeference(initObj[fileName]['@media'][`${media}`], currObj[fileName]['@media'][`${media}`], deference[fileName]['@media'][`${media}`], true, [initObj[fileName].viewPort,  currObj[fileName].viewPort]);
+        })
+        
+        createCssStyleText(deference[fileName]);
+        updateResultWindowText();
+    })
+}
+
+function getPartialDeference(initObj, currObj, lastobj, isMedia = false, viewPort) {
     const keys = Object.keys(currObj);
    
     keys.forEach(key => {
@@ -188,17 +221,10 @@ function createCssStyleText(deference) {
 }
 
 function updateResultWindowText() {
-    const resultWindow = document.querySelector('.resultWindow');
-    const sheetPicker =  document.querySelector('.sheetPicker');
-
     const has = Object.hasOwn(deference, sheetPicker.value);
     
     resultWindow.textContent = has ? deference[sheetPicker.value].cssStyleText : 'null';
 }
 
-function chooseDeference() {
-    const sheetPicker =  extensionWindow.querySelector('.sheetPicker');
-    sheetPicker.onchange = () => {
-        updateResultWindowText(); 
-    };
-}
+
+

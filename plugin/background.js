@@ -9,6 +9,7 @@ chrome.runtime.onConnect.addListener(function(port) {
         }) 
         connectedPorts[port.sender.tab.id].onMessage.addListener(function(msg, sender, sendResponse) {
             connectedPorts.devtools.postMessage(msg);
+            console.log(`${port.sender.tab.id} msg at bg:`, msg); 
         })
     }
     if (port.name === 'devtools') {
@@ -17,10 +18,10 @@ chrome.runtime.onConnect.addListener(function(port) {
             background: `It was connected as ${port.name}`
         }) 
         connectedPorts[port.name].onMessage.addListener(function(msg, sender, sendResponse) {
-            console.log(msg);
+            console.log('devtools msg at bg:', msg);
 
             if (msg.route) {
-                    connectedPorts[msg.route].postMessage(msg); 
+                    try {connectedPorts[msg.route].postMessage(msg); } catch (e) {}
                     return;
             }
         })
@@ -29,11 +30,22 @@ chrome.runtime.onConnect.addListener(function(port) {
 
     port.onDisconnect.addListener(function () {
         if (port.name === `content`) {
-            delete connectedPorts[port.sender.tab.id];
+            connectedPorts[port.sender.tab.id] = {};
         }
         if (port.name === 'devtools') {
-            delete connectedPorts[port.name];
+            connectedPorts[port.name] = {};
         }
+        
     }); 
 
+})
+
+
+chrome.webNavigation.onCompleted.addListener(function() {
+    console.log('Some tab was reloaded...');
+    try {
+        connectedPorts.devtools.postMessage({
+            reset: true
+        })
+    } catch (e) {}
 })

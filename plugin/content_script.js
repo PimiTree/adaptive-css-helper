@@ -181,31 +181,41 @@
 
 // Create a connection to the service worker
 
-let port = chrome.runtime.connect({ name: "content" });
+const port = chrome.runtime.connect({ name: "content" });
 
 
 port.onMessage.addListener(function (msg) {
-    // console.log('Content get msg:', msg)
-  
-    // if(msg.getCurrSheetObj === 'true') {
-    //     port.postMessage({
-    //         currObj: getSheetObject()
-    //     })
-    // }
-    if(msg.getSheetObject) {
-        console.log(msg.route);
+       if(msg.getSheetObject === 'curr') {
+        console.log('get curr obj at:', msg.route);
+
+        port.postMessage({
+            [msg.getSheetObject]: getSheetObject()
+        })
+        return;
+    }
+
+    if(msg.getSheetObject === 'init') {
+        console.log('get init obj at:', msg.route);
         port.postMessage({
             sheetPickeroptions: createSheetPickerOptions(),
             [msg.getSheetObject]: getSheetObject()
         })
-        
 
+        const a = getSheetObject();
+        console.log(a['style.css']['@media']['(max-width: 575px)']);
+
+        return;
     }
+
     if (msg.background) {
         console.log(msg.background)
     }
 
 })
+
+
+
+
 
 function createSheetPickerOptions() {
     const pageSheets = [...document.styleSheets];
@@ -291,3 +301,7 @@ function getSheetObject() {
 // content mounted      889026
 // dev_panel mounted    903555
 // background mounted   748555
+
+
+
+

@@ -4,27 +4,35 @@ const port = chrome.runtime.connect({ name: "devtools" });
 // console.log(chrome.devtools.inspectedWindow.tabId)
 
 port.onMessage.addListener(function(msg, sender, sendResponse) {
-    // console.log(sender)
+    console.log('dev_panel msg', msg)
+    if (msg.curr) {
+        currObj = msg.curr;
+        getDererence();
+        console.log('currObkject',  currObj);
+        return;
+    }
     
     if (msg.init) {
         sheetPicker.innerHTML = msg.sheetPickeroptions;
-        initObj = {...msg.init};
+        initObj = msg.init;
         console.log('initObkject',  initObj);
         return;
     }
+    if(msg.reset) {
+        resetData();
+        port.postMessage({ 
+            route: chrome.devtools.inspectedWindow.tabId,
+            getSheetObject: 'init' 
+        });
+        return;
+    }
 
-    // if (Object.hasOwn(msg, 'currObj')) {
-    //     currObj = {...msg.currObj};
-    //     getDererence();
-    // }
     if((msg.background)) {
         console.log(msg.background)
     }
 })
 
 port.postMessage({ handshake: "devtools" });
-
-
 // messaging
 
 // bussines logic
@@ -48,14 +56,19 @@ port.postMessage({
 
 calcButton.onclick = () => {
     console.log(chrome.devtools.inspectedWindow.tabId)
+    console.log(initObj)
     port.postMessage({ route: chrome.devtools.inspectedWindow.tabId });
-    // port.postMessage({ getCurrSheetObj: 'true' });
+    port.postMessage({ 
+        route: chrome.devtools.inspectedWindow.tabId,
+        getSheetObject: 'curr' 
+    });
 }
 updateResultWindowText();
 
 sheetPicker.onchange = () => {
     updateResultWindowText(); 
 };
+
 
 // bussines logic
 

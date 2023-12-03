@@ -3,6 +3,7 @@
     "name": "Adaptive Supporter",
     "version": "0.1.0",
     "description": "Saving times to create amazing adaptive-responsive layouts at your page",
+    "devtools_page": "devTools/dev_tools.html",
     "action": {
         "default_icon": {
             "16": "icons/16.png",
@@ -13,18 +14,22 @@
         "default_title": "Adaptive Supporter",
         "default_popup": "popup/popup.html"
     },
-    "content_scripts": [
-        {
-            "js": ["main/main.js"],
-            "matches": [
-                "*://localhost/freelance/volodimir/manicure/v1/*"
-            ]
-        }
-    ],
+    "background": {
+        "service_worker": "background.js"
+    },
     "host_permissions": [
         "<all_urls>"
     ],
-    "permissions": ["storage", "tabs", "scripting", "activeTab"]
+    "permissions": ["storage", "tabs","webNavigation", "scripting", "activeTab"],
+    "content_scripts": [
+        {
+            "js": ["content_script.js"],
+            "matches": [
+                "<all_urls>"
+            ],
+            "run_at": "document_end"
+        }
+    ]   
     
    
 

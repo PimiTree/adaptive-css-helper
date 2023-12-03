@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <style>
+         * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0; 
+            outline: none;
+        }
+        body {
+            
+            padding: 25px;
+            width: 100%;
+            height: 100%;
+            font-size: 14px;
+            font-family: Baskerville, "Baskerville Old Face", "Hoefler Text", Garamond, "Times New Roman", serif;
+            background-color: #F1F4F9;
+        }
+        .adaptiveSuporterWindow {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;;
+            width: 100%;
+            height: 100%;
+        }
+        .resultWindow {
+            padding: 10px;
+            width: 100%;
+            min-height: 150px;
+            background-color: #fff;
+            border: 1px solid #F1F4F9;
+            border-radius: 5px;
+        }
+        .sheetPicker {
+            position: relative;
+            height: 30px;
+            border-radius: 5px;
+            z-index: 999;
+        }
+        .calcButton {
+            height: 30px;
+            border: 1px solid #000;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+    </style>
+    <div class="adaptiveSuporterWindow">
+        <h1 class="tabId"></h1>
+        <pre class="resultWindow">sdfsdfsdfsd</pre>
+        <select class="sheetPicker">
+
+        </select>
+        <button class="calcButton">Calculate Deference</button>
+    </div>
+    <script src="dev_panel.js"></script>
+</body>
+</html>

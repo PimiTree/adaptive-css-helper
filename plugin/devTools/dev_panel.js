@@ -1,10 +1,13 @@
 // messaging
-const port = chrome.runtime.connect({ name: "devtools" });
+const port = chrome.runtime.connect({ name: `devtools${chrome.devtools.inspectedWindow.tabId}` });
+
+port.name = `devtools${chrome.devtools.inspectedWindow.tabId}`;
 
 // console.log(chrome.devtools.inspectedWindow.tabId)
 
 port.onMessage.addListener(function(msg, sender, sendResponse) {
     console.log('dev_panel msg', msg)
+    console.log('dev_panel sender', sender)
     if (msg.curr) {
         currObj = msg.curr;
         getDererence();
@@ -18,7 +21,7 @@ port.onMessage.addListener(function(msg, sender, sendResponse) {
         console.log('initObkject',  initObj);
         return;
     }
-    if(msg.reset) {
+    if(msg.reset && port.name == msg.id) {
         resetData();
         port.postMessage({ 
             route: chrome.devtools.inspectedWindow.tabId,
@@ -55,9 +58,7 @@ port.postMessage({
 
 
 calcButton.onclick = () => {
-    console.log(chrome.devtools.inspectedWindow.tabId)
-    console.log(initObj)
-    port.postMessage({ route: chrome.devtools.inspectedWindow.tabId });
+    console.log(port.id);
     port.postMessage({ 
         route: chrome.devtools.inspectedWindow.tabId,
         getSheetObject: 'curr' 

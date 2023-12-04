@@ -185,7 +185,10 @@ const port = chrome.runtime.connect({ name: "content" });
 
 
 port.onMessage.addListener(function (msg) {
-       if(msg.getSheetObject === 'curr') {
+    console.log('I got message:', msg);
+
+
+    if(msg.getSheetObject === 'curr') {
         console.log('get curr obj at:', msg.route);
 
         port.postMessage({

@@ -1,4 +1,8 @@
 // messaging
+let isEnabled = true;
+const disabledMOdal = document.querySelector('.disabledModal');
+const devToolContent = document.querySelector('.adaptiveSuporterWindow');
+
 const port = chrome.runtime.connect({ name: `devtools${chrome.devtools.inspectedWindow.tabId}` });
 
 port.name = `devtools${chrome.devtools.inspectedWindow.tabId}`;
@@ -8,6 +12,7 @@ port.name = `devtools${chrome.devtools.inspectedWindow.tabId}`;
 port.onMessage.addListener(function(msg, sender, sendResponse) {
     console.log('dev_panel msg', msg)
     console.log('dev_panel sender', sender)
+
     if (msg.curr) {
         currObj = msg.curr;
         getDererence();
@@ -21,9 +26,25 @@ port.onMessage.addListener(function(msg, sender, sendResponse) {
         console.log('initObkject',  initObj);
         return;
     }
+
+    if (Object.hasOwn(msg, 'enable') ) {
+        isEnabled = msg.enable;
+                 
+        disabledMOdal.classList.toggle('hide'); 
+        devToolContent.classList.toggle('hide');
+        resetData();
+
+        relativePostMessage({ 
+            route: chrome.devtools.inspectedWindow.tabId,
+            getSheetObject: 'init' 
+        })
+
+        
+    } 
+    
     if(msg.reset && port.name == msg.id) {
         resetData();
-        port.postMessage({ 
+        relativePostMessage({ 
             route: chrome.devtools.inspectedWindow.tabId,
             getSheetObject: 'init' 
         });
@@ -35,7 +56,10 @@ port.onMessage.addListener(function(msg, sender, sendResponse) {
     }
 })
 
-port.postMessage({ handshake: "devtools" });
+relativePostMessage({ 
+    route: chrome.devtools.inspectedWindow.tabId,
+    handshake: "devtools" 
+});
 // messaging
 
 // bussines logic
@@ -51,7 +75,7 @@ let deference = {};
 let sheets = [];
 
 // get initObject
-port.postMessage({ 
+relativePostMessage({ 
     route: chrome.devtools.inspectedWindow.tabId,
     getSheetObject: 'init' 
 });
@@ -59,7 +83,7 @@ port.postMessage({
 
 calcButton.onclick = () => {
     console.log(port.id);
-    port.postMessage({ 
+    relativePostMessage({ 
         route: chrome.devtools.inspectedWindow.tabId,
         getSheetObject: 'curr' 
     });
@@ -74,6 +98,10 @@ sheetPicker.onchange = () => {
 // bussines logic
 
 // functions block;
+function relativePostMessage(msgObj) {
+    if (isEnabled) port.postMessage(msgObj);
+}
+
 function resetData() {
     resultWindow.innerHTML = '';
     sheetPicker.innerHTML = '';
@@ -237,7 +265,7 @@ function createCssStyleText(deference) {
 function updateResultWindowText() {
     const has = Object.hasOwn(deference, sheetPicker.value);
     
-    resultWindow.textContent = has ? deference[sheetPicker.value].cssStyleText : 'null';
+    resultWindow.textContent = has ? deference[sheetPicker.value].cssStyleText : '';
 }
 
 

@@ -10,10 +10,9 @@
 chrome.devtools.panels.elements.createSidebarPane("CAS", function(CAS) {
     // Panel creation callback
     CAS.setPage('devTools/dev_panel.html');
-    CAS.setHeight('8ex');
-    
-    
+    CAS.setHeight('8ex');  
 });
+
 
 
 

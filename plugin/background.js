@@ -51,9 +51,10 @@ chrome.runtime.onConnect.addListener(function(port) {
 
     port.onDisconnect.addListener(function () {
         if (port.name === `content`) {
-            connectedPorts[port.sender.tab.id] = {};
+            delete connectedPorts[port.sender.tab.id];
         }    
-        if (port.name === `devtools`) {
+        if (port.name.includes('devtools')) {
+            delete connectedPorts[port.name]
             console.log('devtools closed')
         }
     }); 
@@ -61,15 +62,18 @@ chrome.runtime.onConnect.addListener(function(port) {
 })
 
 
+
+
 chrome.action.onClicked.addListener(function(e) {
     isEnabled = !isEnabled;
 
     Object.values(connectedPorts).forEach(port => {
+        console.log(port);
         port.postMessage({
             enable: isEnabled
         })
     })
-
+    
     isEnabled 
         ? chrome.action.setIcon({path: {"48": "icons/48.png"}})
         : chrome.action.setIcon({path: {"48": "icons/grayscale/48.png"}});

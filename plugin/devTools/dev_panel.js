@@ -20,14 +20,14 @@ port.onMessage.addListener(function(msg, sender, sendResponse) {
     if (msg.curr) {
         currObj = msg.curr;
         getDererence();
-        console.log('currObkject',  currObj);
+        console.log('currObject',  currObj);
         return;
     }
     
     if (msg.init) {
         sheetPicker.innerHTML = msg.sheetPickeroptions;
         initObj = msg.init;
-        console.log('initObkject',  initObj);
+        console.log('initObject',  initObj);
         return;
     }
 
@@ -125,14 +125,14 @@ function createSheetPickerOptions() {
 function getDererence() {
     Object.keys(currObj).forEach(fileName => {
         deference[fileName] = {};
-        getPartialDeference(initObj[fileName], currObj[fileName], deference[fileName], false, [initObj[fileName].viewPort,  currObj[fileName].viewPort]);
+        getPartialDeference(initObj[fileName], currObj[fileName], deference[fileName]);
         
         deference[fileName]['@media'] = {};
 
         Object.keys(initObj[fileName]['@media'] || []).forEach(media => {
             deference[fileName]['@media'][`${media}`] = [];
     
-            getPartialDeference(initObj[fileName]['@media'][`${media}`], currObj[fileName]['@media'][`${media}`], deference[fileName]['@media'][`${media}`], true, [initObj[fileName].viewPort,  currObj[fileName].viewPort]);
+            getPartialDeference(initObj[fileName]['@media'][`${media}`], currObj[fileName]['@media'][`${media}`], deference[fileName]['@media'][`${media}`]);
         })
         
         createCssStyleText(deference[fileName]);
@@ -140,7 +140,7 @@ function getDererence() {
     })
 }
 
-function getPartialDeference(initObj, currObj, lastobj, isMedia = false, viewPort) {
+function getPartialDeference(initObj, currObj, lastobj) {
     const keys = Object.keys(currObj);
    
     keys.forEach(key => {
@@ -159,7 +159,8 @@ function getPartialDeference(initObj, currObj, lastobj, isMedia = false, viewPor
                 }
                 
                 if (secArray[i][1] !== array[i-shift]?.[1]) {
-                    const cssLocksText = array[i-shift]?.[1] !== undefined ? __insertCSSLock(key, array[i-shift][1], secArray[i][1], viewPort) : false;
+                    // const cssLocksText = array[i-shift]?.[1] !== undefined ? __insertCSSLock(array[i-shift][1], secArray[i][1], viewPort) : false;
+                    const cssLocksText = false;
 
                     def[`${key}`] ??= [];    
                     def[`${key}`][i] =  [secArray[i][0], cssLocksText ? cssLocksText : secArray[i][1]];
@@ -168,12 +169,10 @@ function getPartialDeference(initObj, currObj, lastobj, isMedia = false, viewPor
             })
         }
     })
-    if (!isMedia) {
-        lastobj.mediaQuery = lastobj['viewPort'] ? [[`@media (${lastobj['viewPort'][0][0]}: ${lastobj['viewPort'][0][1]}px) {`],['}']] : '';  
-    }  
+    
 }
 
-function  __insertCSSLock(param, before, after, viewPort) {
+function  __insertCSSLock(before, after, viewPort) {
     const setOfBefore = before.split(' ');
     const setOfAfter = after.split(' ');
 
@@ -217,13 +216,12 @@ function createCssStyleText(deference) {
     assemblyCss(deference);
     assemblyMediaCss(deference['@media']);
 
-    function assemblyCss(obj, isExistMedia = true) {
+    function assemblyCss(obj) {
         const keys = Object.keys(obj);
 
         assemblyRules(keys, obj)
         
-        if (isExistMedia) deference.cssStyleText =`${deference.mediaQuery?.[0] ? '//new mediaQuery\n' : ''}${deference.mediaQuery?.[0] ? deference.mediaQuery?.[0] + '\n' : ''}${deference.cssStyleText.trim()}\n${deference.mediaQuery?.[1] ? deference.mediaQuery?.[1] + '\n' : ''}`
-    }
+   }
     function assemblyMediaCss(obj) {
         const mediaQuery = Object.keys(obj);
         
@@ -249,7 +247,6 @@ function createCssStyleText(deference) {
             if (prop.search(/^[.:#[*a-zA-Z]{1}/) === -1) return;
             if (prop === 'cssStyleText') return;
             if (prop === 'mediaQuery') return;
-            if (prop === 'viewPort') return;
             
             let ruleString = '';
             obj[`${prop}`].forEach(rule => {

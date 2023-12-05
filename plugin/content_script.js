@@ -102,7 +102,7 @@ function getSheetObject() {
             }
             
         })
-        finalObj['viewPort'] = [['max-width', `${window.innerWidth}`], ['max-height', `${window.innerHeight}`]]
+        // finalObj['viewPort'] = [['max-width', `${window.innerWidth}`], ['max-height', `${window.innerHeight}`]]
     }
 }
 

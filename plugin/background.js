@@ -30,7 +30,6 @@ chrome.runtime.onConnect.addListener(function(port) {
 
             console.log('devtools msg at bg:', msg);
 
-
             msg.route 
                 ? relativePostMessage(connectedPorts[msg.route], msg)
                 : () => {throw 'Message to backgroud must have "route" field'} ;

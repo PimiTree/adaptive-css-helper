@@ -4,6 +4,18 @@
     "version": "0.1.0",
     "description": "Saving times to create amazing adaptive-responsive layouts at your page",
     "devtools_page": "devTools/dev_tools.html",
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "js": ["content_script.js"],
+            "matches": [
+                "<all_urls>"
+            ],
+            "run_at": "document_end"
+        }
+    ],
     "action": {
         "default_icon": {
             "48": "icons/48.png",
@@ -15,23 +27,9 @@
         "48": "icons/48.png",
         "128": "icons/128.png"
     },
-    "background": {
-        "service_worker": "background.js"
-    },
+   
     "host_permissions": [
         "<all_urls>"
     ],
-    "permissions": ["tabs","webNavigation", "scripting", "activeTab"],
-    "content_scripts": [
-        {
-            "js": ["content_script.js"],
-            "matches": [
-                "<all_urls>"
-            ],
-            "run_at": "document_end"
-        }
-    ]   
-    
-   
-
+    "permissions": ["tabs","webNavigation", "scripting", "activeTab"]
 }

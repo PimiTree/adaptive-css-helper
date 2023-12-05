@@ -66,11 +66,6 @@ port.onMessage.addListener(function(msg, sender, sendResponse) {
         console.log(msg.background)
     }
 })
-
-relativePostMessage({ 
-    route: port.id,
-    handshake: "devtools" 
-});
 // messaging
 
 // bussines logic

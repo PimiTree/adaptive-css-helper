@@ -2,9 +2,7 @@ const connectedPorts = {};
 let isEnabled = true;
 
 
-chrome.runtime.onConnect.addListener(function(port) { 
-   
-    
+chrome.runtime.onConnect.addListener(function(port) {  
     if (port.name === `content`) {
         connectedPorts[port.sender.tab.id] = port;
         connectedPorts[port.sender.tab.id]['id'] = port.sender.tab.id;
@@ -21,19 +19,24 @@ chrome.runtime.onConnect.addListener(function(port) {
         console.log(port);
 
         connectedPorts[port.name] = port;
-
+        
         const msg = {
             background: `It was connected as ${port.name}`
         };
         relativePostMessage(connectedPorts[port.name], msg)
    
         connectedPorts[port.name].onMessage.addListener(function(msg, sender, sendResponse) {
+            if (msg.getEnabledStatus) port.postMessage({enable: isEnabled});
+
             console.log('devtools msg at bg:', msg);
-            relativePostMessage(connectedPorts[msg.route], msg);
+
+
+            msg.route 
+                ? relativePostMessage(connectedPorts[msg.route], msg)
+                : () => {throw 'Message to backgroud must have "route" field'} ;
         });
 
         chrome.webNavigation.onCompleted.addListener(function(e) {
-
             console.log('Some tab was reloaded...', e);
 
             const msg = {

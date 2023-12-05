@@ -1,6 +1,8 @@
 // Create a connection to the service worker
 const port = chrome.runtime.connect({ name: "content" });
 
+const initObj = getSheetObject();
+
 // messging
 port.onMessage.addListener(function (msg) {
     console.log('I got message:', msg);
@@ -18,7 +20,7 @@ port.onMessage.addListener(function (msg) {
         console.log('get init obj at:', msg.route);
         port.postMessage({
             sheetPickeroptions: createSheetPickerOptions(),
-            [msg.getSheetObject]: getSheetObject()
+            [msg.getSheetObject]: initObj
         })
 
         return;

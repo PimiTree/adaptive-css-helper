@@ -5,9 +5,13 @@ const devToolContent = document.querySelector('.adaptiveSuporterWindow');
 
 const port = chrome.runtime.connect({ name: `devtools${chrome.devtools.inspectedWindow.tabId}` });
 
-port.name = `devtools${chrome.devtools.inspectedWindow.tabId}`;
+port.id = chrome.devtools.inspectedWindow.tabId;
 
-// console.log(chrome.devtools.inspectedWindow.tabId)
+port.postMessage({
+    route: port.id,
+    getEnabledStatus: true
+});
+// console.log(port.id)
 
 port.onMessage.addListener(function(msg, sender, sendResponse) {
     console.log('dev_panel msg', msg)
@@ -30,22 +34,29 @@ port.onMessage.addListener(function(msg, sender, sendResponse) {
     if (Object.hasOwn(msg, 'enable') ) {
         isEnabled = msg.enable;
                  
-        disabledMOdal.classList.toggle('hide'); 
-        devToolContent.classList.toggle('hide');
-        resetData();
+        if (isEnabled) {
+            disabledMOdal.classList.add('hide'); 
+            devToolContent.classList.remove('hide');
+        } else {
+            disabledMOdal.classList.remove('hide'); 
+            devToolContent.classList.add('hide');
+            resetData();
+        }
 
-        relativePostMessage({ 
-            route: chrome.devtools.inspectedWindow.tabId,
-            getSheetObject: 'init' 
-        })
-
-        
+        if (Object.values(initObj).length === 0) {
+            relativePostMessage({ 
+                route: port.id,
+                getSheetObject: 'init' 
+            })
+        }
     } 
     
+    port.name = `devtools${port.id}`;
+
     if(msg.reset && port.name == msg.id) {
         resetData();
         relativePostMessage({ 
-            route: chrome.devtools.inspectedWindow.tabId,
+            route: port.id,
             getSheetObject: 'init' 
         });
         return;
@@ -57,7 +68,7 @@ port.onMessage.addListener(function(msg, sender, sendResponse) {
 })
 
 relativePostMessage({ 
-    route: chrome.devtools.inspectedWindow.tabId,
+    route: port.id,
     handshake: "devtools" 
 });
 // messaging
@@ -67,28 +78,25 @@ const calcButton = document.querySelector('.calcButton');
 const resultWindow = document.querySelector('.resultWindow');
 const sheetPicker = document.querySelector('.sheetPicker');
 const tadIdContainer = document.querySelector('.tabId');
-tadIdContainer.textContent = chrome.devtools.inspectedWindow.tabId;
+tadIdContainer.textContent = port.id;
 
 let initObj = {};
 let currObj = {};
 let deference = {};
-let sheets = [];
 
 // get initObject
 relativePostMessage({ 
-    route: chrome.devtools.inspectedWindow.tabId,
+    route: port.id,
     getSheetObject: 'init' 
 });
-
 
 calcButton.onclick = () => {
     console.log(port.id);
     relativePostMessage({ 
-        route: chrome.devtools.inspectedWindow.tabId,
+        route: port.id,
         getSheetObject: 'curr' 
     });
 }
-updateResultWindowText();
 
 sheetPicker.onchange = () => {
     updateResultWindowText(); 
@@ -104,11 +112,10 @@ function relativePostMessage(msgObj) {
 
 function resetData() {
     resultWindow.innerHTML = '';
-    sheetPicker.innerHTML = '';
-    initObj = {};
+    if (isEnabled) sheetPicker.innerHTML = '';
+    if (isEnabled) initObj = {};
     currObj = {};
     deference = {};
-    sheets = [];
 }
 function createSheetPickerOptions() {
     const pageSheets = [...document.styleSheets];
@@ -239,7 +246,6 @@ function createCssStyleText(deference) {
         })
         
     } 
-
 
     function assemblyRules(keys, obj, isExistMedia = false) {
         let cssStyleText = ''

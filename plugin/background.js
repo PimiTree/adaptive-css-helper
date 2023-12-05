@@ -7,7 +7,7 @@ chrome.runtime.onConnect.addListener(function(port) {
         connectedPorts[port.sender.tab.id] = port;
         connectedPorts[port.sender.tab.id]['id'] = port.sender.tab.id;
 
-        const msg = {background: `It was connected as ${ port.sender.tab.id}`}
+        const msg = {backgroundHandshake: `It was connected as ${ port.sender.tab.id}`}
         relativePostMessage(connectedPorts[port.sender.tab.id], msg);
 
         connectedPorts[port.sender.tab.id].onMessage.addListener(function(msg, sender, sendResponse) {
@@ -21,7 +21,7 @@ chrome.runtime.onConnect.addListener(function(port) {
         connectedPorts[port.name] = port;
         
         const msg = {
-            background: `It was connected as ${port.name}`
+            backgroundHandshake: `It was connected as ${port.name}`
         };
         relativePostMessage(connectedPorts[port.name], msg)
    

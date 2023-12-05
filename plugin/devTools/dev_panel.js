@@ -46,7 +46,7 @@ port.onMessage.addListener(function(msg, sender, sendResponse) {
         if (Object.values(initObj).length === 0) {
             relativePostMessage({ 
                 route: port.id,
-                getSheetObject: 'init' 
+                getSheet: 'init' 
             })
         }
     } 
@@ -57,7 +57,7 @@ port.onMessage.addListener(function(msg, sender, sendResponse) {
         resetData();
         relativePostMessage({ 
             route: port.id,
-            getSheetObject: 'init' 
+            getSheet: 'init' 
         });
         return;
     }
@@ -82,14 +82,14 @@ let deference = {};
 // get initObject
 relativePostMessage({ 
     route: port.id,
-    getSheetObject: 'init' 
+    getSheet: 'init' 
 });
 
 calcButton.onclick = () => {
     console.log(port.id);
     relativePostMessage({ 
         route: port.id,
-        getSheetObject: 'curr' 
+        getSheet: 'curr' 
     });
 }
 

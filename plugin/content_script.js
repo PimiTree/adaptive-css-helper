@@ -5,33 +5,26 @@ const initObj = getSheetObject();
 
 // messging
 port.onMessage.addListener(function (msg) {
-    console.log('I got message:', msg);
-
-    if(msg.getSheetObject === 'curr') {
-        console.log('get curr obj at:', msg.route);
-
-        port.postMessage({
-            [msg.getSheetObject]: getSheetObject()
-        })
-        return;
-    }
+    msgLogger(msg);
     
-    if(msg.getSheetObject === 'init') {
-        console.log('get init obj at:', msg.route);
-        port.postMessage({
-            sheetPickeroptions: createSheetPickerOptions(),
-            [msg.getSheetObject]: initObj
-        })
-
-        return;
-    }
-
-    if (msg.background) {
-        console.log(msg.background)
-    }
+    sendStyleSheetObj(msg);
 })
 
 // function block
+function msgLogger(msg) {
+    console.log('I got message:', msg);
+}
+
+function sendStyleSheetObj({getSheet}) {
+    if (!getSheet) return;
+
+    const msg = {};
+    msg[getSheet] = getSheet === 'curr' ? getSheetObject() : initObj;
+    msg.sheetPickeroptions = getSheet === 'init' ? createSheetPickerOptions() : '';
+    port.postMessage(msg);
+}
+
+
 function createSheetPickerOptions() {
     const pageSheets = [...document.styleSheets];
 

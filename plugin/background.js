@@ -1,8 +1,7 @@
 const connectedPorts = {};
 let isEnabled = true;
 
-
-chrome.runtime.onConnect.addListener(function(port) {  
+chrome.runtime.onConnect.addListener(function(port) {
     if (port.name === `content`) {
         connectedPorts[port.sender.tab.id] = port;
         connectedPorts[port.sender.tab.id]['id'] = port.sender.tab.id;
@@ -17,20 +16,19 @@ chrome.runtime.onConnect.addListener(function(port) {
     }
     if (port.name.includes('devtools')) {
         console.log(port);
-
         connectedPorts[port.name] = port;
-        
+
         const msg = {
             backgroundHandshake: `It was connected as ${port.name}`
         };
         relativePostMessage(connectedPorts[port.name], msg)
-   
+
         connectedPorts[port.name].onMessage.addListener(function(msg, sender, sendResponse) {
             if (msg.getEnabledStatus) port.postMessage({enable: isEnabled});
 
             console.log('devtools msg at bg:', msg);
 
-            msg.route 
+            msg.route
                 ? relativePostMessage(connectedPorts[msg.route], msg)
                 : () => {throw 'Message to backgroud must have "route" field'} ;
         });
@@ -43,26 +41,22 @@ chrome.runtime.onConnect.addListener(function(port) {
                 reset: true
             };
             try {
-                relativePostMessage( connectedPorts[`devtools${e.tabId}`], msg); 
+                relativePostMessage( connectedPorts[`devtools${e.tabId}`], msg);
             } catch(e) {}
-                       
+
         })
     }
 
     port.onDisconnect.addListener(function () {
         if (port.name === `content`) {
             delete connectedPorts[port.sender.tab.id];
-        }    
+        }
         if (port.name.includes('devtools')) {
             delete connectedPorts[port.name]
             console.log('devtools closed')
         }
-    }); 
-
+    });
 })
-
-
-
 
 chrome.action.onClicked.addListener(function(e) {
     isEnabled = !isEnabled;
@@ -73,13 +67,11 @@ chrome.action.onClicked.addListener(function(e) {
             enable: isEnabled
         })
     })
-    
-    isEnabled 
+
+    isEnabled
         ? chrome.action.setIcon({path: {"48": "icons/48.png"}})
         : chrome.action.setIcon({path: {"48": "icons/grayscale/48.png"}});
 })
-
-
 
 function relativePostMessage(port, msgObj) {
     if (isEnabled) port.postMessage(msgObj);

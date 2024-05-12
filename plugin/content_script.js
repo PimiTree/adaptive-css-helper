@@ -1,13 +1,10 @@
-// Create a connection to the service worker
 const port = chrome.runtime.connect({ name: "content" });
-
 const initObj = getSheetObject();
 
-// messging
 port.onMessage.addListener(function (msg) {
     msgLogger(msg);
-    
-    sendStyleSheetObj(msg);
+
+    sendStyleSheet(msg, initObj);
 })
 
 // function block
@@ -15,52 +12,72 @@ function msgLogger(msg) {
     console.log('I got message:', msg);
 }
 
-function sendStyleSheetObj({getSheet}) {
-    if (!getSheet) return;
-
-    const msg = {};
-    msg[getSheet] = getSheet === 'curr' ? getSheetObject() : initObj;
-    msg.sheetPickeroptions = getSheet === 'init' ? createSheetPickerOptions() : '';
-    port.postMessage(msg);
+const messageMap = {
+    init(initObj) {
+        return {
+            type: 'init',
+            obj: initObj,
+            sheetPickerOptions: createSheetPickerOptions()
+        }
+    },
+    curr() {
+        return {
+            type: 'curr',
+            obj: getSheetObject()
+        }
+    }
 }
 
+function sendStyleSheet({getSheet}, initObj) {
+    if (!getSheet) return;
 
+    port.postMessage(
+        messageMap[getSheet](initObj)
+    );
+}
 function createSheetPickerOptions() {
     const pageSheets = [...document.styleSheets];
 
     let accumulator = '';
-    pageSheets.forEach((sheet, i)=> {
-        const fileName = sheet.href ? sheet.href.replace(/^https?\:(\/.+\/)/, '') : `file${i}`;
 
-        accumulator = `${accumulator}\n<option value='${fileName}'>${fileName}</option>`;
-    })   
+    pageSheets.forEach((sheet, i)=> {
+        if(sheet.href === null || sheet.href.includes(window.location.origin)) {
+            const fileName = sheet.href ? sheet.href.replace(/^https?\:(\/.+\/)/, '') : `file${i}`;
+
+            accumulator = `${accumulator}\n<option value='${fileName}'>${fileName}</option>`;
+        }
+
+    })
 
     return accumulator;
 }
-
 function getSheetObject() {
     const pageSheets = [...document.styleSheets];
 
     const object = {}
 
     pageSheets.forEach((sheet, i) => {
-        const fileName = sheet.href ? sheet.href.replace(/^https?\:(\/.+\/)/, '') : `file${i}`;
+        if ( sheet.href === null || sheet.href.includes(window.location.origin)) {
+            const fileName = sheet.href
+                                        ? sheet.href.replace(/^https?\:(\/.+\/)/, '')
+                                        : `file${i}`;
 
-        object[fileName] = {};
-        createObjectFromDocumentStylsheet([...sheet.cssRules], object[fileName]);
+            object[fileName] = {};
+            createObjectFromDocumentStylsheet([...sheet.cssRules], object[fileName]);
+        }
     })
-   
+
     return object;
 
     function createObjectFromDocumentStylsheet(sheet, finalObj) {
         sheet.forEach(style => {
             if (style.cssText.includes('@font-face')) {
-                return;                
+                return;
             }
-    
+
             if (style.selectorText !== undefined ) {
                 const separetion = finalObj[`${style.selectorText}`]?.length ? finalObj[`${style.selectorText}`] : []
-    
+
                 finalObj[`${style.selectorText}`] = [...style.cssText
                     .replace(`${style.selectorText} `, '')
                     .replace(/[\{|\}|"|'|]+/g, '')
@@ -72,11 +89,11 @@ function getSheetObject() {
                         return arr.split(': ');
                     }), ...separetion];
             }
-                
+
             if (style.cssText.includes('@media')) {
                 if (finalObj['@media'] === undefined) finalObj['@media'] = {};
                 if (finalObj['@media'][`${style.conditionText}`] === undefined) finalObj['@media'][`${style.conditionText}`] = {};
-    
+
                 Object.values(style.cssRules).forEach( rule => {
                     finalObj['@media']
                             [`${style.conditionText}`]
@@ -90,10 +107,10 @@ function getSheetObject() {
                                                             .map(arr => {
                                                                 return arr.split(': ');
                                                             });
-                
-                })                    
+
+                })
             }
-            
+
         })
         // finalObj['viewPort'] = [['max-width', `${window.innerWidth}`], ['max-height', `${window.innerHeight}`]]
     }

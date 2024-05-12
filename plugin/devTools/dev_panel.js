@@ -2,15 +2,29 @@
 let isEnabled = true;
 const disabledMOdal = document.querySelector('.disabledModal');
 const devToolContent = document.querySelector('.adaptiveSuporterWindow');
-
-const port = chrome.runtime.connect({ name: `devtools${chrome.devtools.inspectedWindow.tabId}` });
-
+const initTime = Date.now();
+console.log(initTime);
+let port = chrome.runtime.connect({ name: `devtools${chrome.devtools.inspectedWindow.tabId}` });
 port.id = chrome.devtools.inspectedWindow.tabId;
-
 port.postMessage({
     route: port.id,
     getEnabledStatus: true
 });
+
+port.onDisconnect.addListener(() => {
+    console.log('Port:', port, 'disconnected. Idle time:' + (Date.now() - initTime))
+    port = null;
+    port = chrome.runtime.connect({ name: `devtools${chrome.devtools.inspectedWindow.tabId}` });
+    port.id = chrome.devtools.inspectedWindow.tabId;
+
+    port.postMessage({
+        route: port.id,
+        getEnabledStatus: true
+    });
+
+    console.log('Port:', port, 'try to restore connection');
+})
+
 // console.log(port.id)
 
 port.onMessage.addListener(function(msg, sender, sendResponse) {
@@ -22,15 +36,6 @@ port.onMessage.addListener(function(msg, sender, sendResponse) {
 
     if (Object.hasOwn(msg, 'enable') ) {
         isEnabled = msg.enable;
-
-        // if (isEnabled) {
-        //     disabledMOdal.classList.add('hide');
-        //     devToolContent.classList.remove('hide');
-        // } else {
-        //     disabledMOdal.classList.remove('hide');
-        //     devToolContent.classList.add('hide');
-        //     resetData();
-        // }
 
         if (Object.values(initObj).length === 0) {
             relativePostMessage({
@@ -236,8 +241,8 @@ function createCssStyleText(deference) {
             const mediaRules = Object.keys(obj[`${query}`]);
 
             if (mediaRules.length > 0) {
-                text = `\n //changes in exist media \n@media ${query} {\n`;
-                text += assemblyRules(mediaRules, obj[`${query}`], true)
+                text = `\n //changes in exist media \n@media ${query} {`;
+                text += '\n' + assemblyRules(mediaRules, obj[`${query}`], true)
                 text += '\n}'
                 deference.cssStyleText += text
             }

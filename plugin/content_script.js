@@ -1,26 +1,28 @@
-const port = chrome.runtime.connect({ name: "content" });
+let port = chrome.runtime.connect({ name: "content" });
 const initObj = getSheetObject();
 
 port.onMessage.addListener(function (msg) {
     msgLogger(msg);
-
     sendStyleSheet(msg, initObj);
 })
-
-// function block
-function msgLogger(msg) {
-    console.log('I got message:', msg);
-}
+port.onDisconnect.addListener(function (msg) {
+    port = chrome.runtime.connect({ name: "content" });
+    console.log('Connection lost')
+    port.onMessage.addListener(function (msg) {
+        msgLogger(msg);
+        sendStyleSheet(msg, initObj);
+    })
+})
 
 const messageMap = {
-    init(initObj) {
+    init: (initObj) => {
         return {
             type: 'init',
             obj: initObj,
             sheetPickerOptions: createSheetPickerOptions()
         }
     },
-    curr() {
+    curr: () => {
         return {
             type: 'curr',
             obj: getSheetObject()
@@ -28,11 +30,12 @@ const messageMap = {
     }
 }
 
-function sendStyleSheet({getSheet}, initObj) {
-    if (!getSheet) return;
+// function block
+function sendStyleSheet(msg, initObj) {
+    if (!msg.getSheet) return;
 
     port.postMessage(
-        messageMap[getSheet](initObj)
+        messageMap[msg.getSheet](initObj)
     );
 }
 function createSheetPickerOptions() {
@@ -44,11 +47,10 @@ function createSheetPickerOptions() {
         if(sheet.href === null || sheet.href.includes(window.location.origin)) {
             const fileName = sheet.href ? sheet.href.replace(/^https?\:(\/.+\/)/, '') : `file${i}`;
 
-            accumulator = `${accumulator}\n<option value='${fileName}'>${fileName}</option>`;
+            accumulator += `\n<option value='${fileName}'>${fileName}</option>`;
         }
 
     })
-
     return accumulator;
 }
 function getSheetObject() {
@@ -115,7 +117,11 @@ function getSheetObject() {
         // finalObj['viewPort'] = [['max-width', `${window.innerWidth}`], ['max-height', `${window.innerHeight}`]]
     }
 }
+function msgLogger(msg) {
+    console.log('I got message:', msg);
+}
 
-
-
+// setInterval(() => {
+//     port.postMessage({refresh: true}) // prevent service worker disconnection
+// }, 30000)
 

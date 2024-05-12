@@ -4,57 +4,87 @@ const disabledMOdal = document.querySelector('.disabledModal');
 const devToolContent = document.querySelector('.adaptiveSuporterWindow');
 const initTime = Date.now();
 console.log(initTime);
-let port = chrome.runtime.connect({ name: `devtools${chrome.devtools.inspectedWindow.tabId}` });
-port.id = chrome.devtools.inspectedWindow.tabId;
-port.postMessage({
-    route: port.id,
-    getEnabledStatus: true
-});
+let port;
 
-port.onDisconnect.addListener(() => {
-    console.log('Port:', port, 'disconnected. Idle time:' + (Date.now() - initTime))
-    port = null;
+setConnection();
+// port.onMessage.addListener(function(msg, sender, sendResponse) {
+//     console.log('dev_panel msg:', msg, 'from:', sender)
+//
+//     msg.type && onMessageMap[msg.type](msg);
+//
+//     Object.hasOwn(msg, 'enable') && enabledStateTogglers[msg.enable]();
+//
+//     if (Object.hasOwn(msg, 'enable') ) {
+//         isEnabled = msg.enable;
+//
+//         if (Object.values(initObj).length === 0) {
+//             relativePostMessage({
+//                 route: port.id,
+//                 getSheet: 'init'
+//             })
+//         }
+//     }
+//
+//     port.name = `devtools${port.id}`;
+//
+//     if(msg.reset && port.name == msg.id) {
+//         resetData();
+//         relativePostMessage({
+//             route: port.id,
+//             getSheet: 'init'
+//         });
+//     }
+// })
+// port.onDisconnect.addListener(() => {
+//     console.log('Port:', port, 'disconnected. Idle time:' + (Date.now() - initTime))
+//
+//     console.log('Port:', port, 'try to restore connection');
+// })
+
+function setConnection() {
     port = chrome.runtime.connect({ name: `devtools${chrome.devtools.inspectedWindow.tabId}` });
     port.id = chrome.devtools.inspectedWindow.tabId;
-
     port.postMessage({
         route: port.id,
         getEnabledStatus: true
     });
+    port.onMessage.addListener(function(msg, sender, sendResponse) {
+        console.log('dev_panel msg:', msg, 'from:', sender)
 
-    console.log('Port:', port, 'try to restore connection');
-})
+        msg.type && onMessageMap[msg.type](msg);
 
-// console.log(port.id)
+        Object.hasOwn(msg, 'enable') && enabledStateTogglers[msg.enable]();
 
-port.onMessage.addListener(function(msg, sender, sendResponse) {
-    console.log('dev_panel msg:', msg, 'from:', sender)
+        if (Object.hasOwn(msg, 'enable') ) {
+            isEnabled = msg.enable;
 
-    msg.type && onMessageMap[msg.type](msg);
+            if (Object.values(initObj).length === 0) {
+                relativePostMessage({
+                    route: port.id,
+                    getSheet: 'init'
+                })
+            }
+        }
 
-    Object.hasOwn(msg, 'enable') && enabledStateTogglers[msg.enable]();
+        port.name = `devtools${port.id}`;
 
-    if (Object.hasOwn(msg, 'enable') ) {
-        isEnabled = msg.enable;
-
-        if (Object.values(initObj).length === 0) {
+        if(msg.reset && port.name == msg.id) {
+            resetData();
             relativePostMessage({
                 route: port.id,
                 getSheet: 'init'
-            })
+            });
         }
-    }
+    })
+    port.onDisconnect.addListener(() => {
+        console.log('Port:', port, 'disconnected. Idle time:' + (Date.now() - initTime))
+        setConnection();
+        console.log('Port:', port, 'try to restore connection');
+    })
+}
+// console.log(port.id)
 
-    port.name = `devtools${port.id}`;
 
-    if(msg.reset && port.name == msg.id) {
-        resetData();
-        relativePostMessage({
-            route: port.id,
-            getSheet: 'init'
-        });
-    }
-})
 // messaging
 
 // bussines logic
@@ -74,8 +104,17 @@ relativePostMessage({
     getSheet: 'init'
 });
 
-calcButton.onclick = () => {
-    console.log(port.id);
+// calcButton.onclick = () => {
+//     console.log(port.id);
+//     relativePostMessage({
+//         route: port.id,
+//         getSheet: 'curr'
+//     });
+// }
+
+calcButton.addEventListener('click',calcButtonHandler);
+
+function calcButtonHandler() {
     relativePostMessage({
         route: port.id,
         getSheet: 'curr'

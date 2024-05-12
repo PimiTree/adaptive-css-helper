@@ -45,7 +45,6 @@ chrome.runtime.onConnect.addListener(function(port) {
             console.log('devtools closed')
         }
     });
-    console.log('Ports', connectedPorts)
 })
 
 function portOnMessageHandler(port) {
